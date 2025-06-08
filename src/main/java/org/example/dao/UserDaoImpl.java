@@ -2,15 +2,17 @@ package org.example.dao;
 
 import org.example.configuration.HibernateConfiguration;
 import org.example.domain.User;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import java.util.List;
+import java.util.Optional;
 
 public class UserDaoImpl implements UserDao
 {
 	@Override
-	public Long create(String name, String email, int age)
+	public User create(User newUser)
 	{
 		Transaction transaction = null;
 
@@ -18,12 +20,10 @@ public class UserDaoImpl implements UserDao
 		{
 			transaction = session.beginTransaction();
 
-			var newUser = buildUser(name, email, age, new User());
-			var user = session.merge(newUser);
-
+			session.persist(newUser);
 			transaction.commit();
 
-			return user.getId();
+			return newUser;
 		}
 		catch (Exception e)
 		{
@@ -37,7 +37,7 @@ public class UserDaoImpl implements UserDao
 	}
 
 	@Override
-	public void update(User newUser)
+	public User update(User newUser)
 	{
 		Transaction transaction = null;
 
@@ -45,16 +45,10 @@ public class UserDaoImpl implements UserDao
 		{
 			transaction = session.beginTransaction();
 
-			var oldUser = findById(newUser.getId());
-			var updatedUser = buildUser(
-					newUser.getName(),
-					newUser.getEmail(),
-					newUser.getAge(),
-					oldUser
-			);
-
-			session.merge(updatedUser);
+			var user = session.merge(newUser);
 			transaction.commit();
+
+			return user;
 		}
 		catch (Exception e)
 		{
@@ -68,15 +62,15 @@ public class UserDaoImpl implements UserDao
 	}
 
 	@Override
-	public User findById(Long id)
+	public Optional<User> findById(Long id)
 	{
 		try (var session = HibernateConfiguration.getSessionFactory().openSession())
 		{
-			return session.get(User.class, id);
+			return Optional.of(session.get(User.class, id));
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException("При получении пользователя с id = %s произошла ошибка:".formatted(id), e);
+			throw new ObjectNotFoundException("При получении пользователя с id = %s произошла ошибка:".formatted(id), e);
 		}
 	}
 
@@ -96,15 +90,13 @@ public class UserDaoImpl implements UserDao
 	}
 
 	@Override
-	public void delete(Long id)
+	public void delete(User user)
 	{
 		Transaction transaction = null;
 
 		try (Session session = HibernateConfiguration.getSessionFactory().openSession())
 		{
 			transaction = session.beginTransaction();
-
-			var user = findById(id);
 
 			session.remove(user);
 			transaction.commit();
@@ -116,16 +108,7 @@ public class UserDaoImpl implements UserDao
 				transaction.rollback();
 			}
 
-			throw new RuntimeException("При удалении пользователя с id = %s произошла ошибка:".formatted(id), e);
+			throw new RuntimeException("При удалении пользователя с id = %s произошла ошибка:".formatted(user.getId()), e);
 		}
-	}
-
-	private User buildUser(String name, String email, int age, User old)
-	{
-		old.setName(name);
-		old.setEmail(email);
-		old.setAge(age);
-
-		return old;
 	}
 }

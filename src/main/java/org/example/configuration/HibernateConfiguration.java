@@ -1,6 +1,7 @@
 package org.example.configuration;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.example.domain.User;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -8,8 +9,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 public class HibernateConfiguration
 {
+	@Setter
 	@Getter
-	private static final SessionFactory sessionFactory = buildSessionFactory();
+	private static SessionFactory sessionFactory = buildSessionFactory();
 
 	private static SessionFactory buildSessionFactory()
 	{

@@ -3,16 +3,17 @@ package org.example.dao;
 import org.example.domain.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserDao
 {
-	Long create(String name, String email, int age);
+	User create(User user);
 
-	void update(User user);
+	User update(User user);
 
-	User findById(Long id);
+	Optional<User> findById(Long id);
 
 	List<User> findAll();
 
-	void delete(Long id);
+	void delete(User user);
 }
